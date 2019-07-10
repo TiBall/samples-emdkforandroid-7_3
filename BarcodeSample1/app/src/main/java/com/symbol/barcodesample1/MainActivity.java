@@ -93,6 +93,7 @@ public class MainActivity extends Activity implements EMDKListener, DataListener
         spinnerScannerDevices = (Spinner)findViewById(R.id.spinnerScannerDevices);
 
         EMDKResults results = EMDKManager.getEMDKManager(getApplicationContext(), this);
+
         if (results.statusCode != EMDKResults.STATUS_CODE.SUCCESS) {
             updateStatus("EMDKManager object request failed!");
             return;
@@ -166,10 +167,30 @@ public class MainActivity extends Activity implements EMDKListener, DataListener
         }
     }
 
+    private boolean switchedToMulti = false;
     @Override
     public void onData(ScanDataCollection scanDataCollection) {
         if ((scanDataCollection != null) && (scanDataCollection.getResult() == ScannerResults.SUCCESS)) {
             ArrayList <ScanData> scanData = scanDataCollection.getScanData();
+
+            if(scanData.size() == 1 && !switchedToMulti)
+            {
+                updateData("single barcode detected. Switching to multi...");
+                switchedToMulti = true;
+                setMultiBarcodeMode();
+//                try {
+//                    cancelRead();
+//                    scanner.read();
+//                } catch (ScannerException e) {
+//                    updateStatus(e.getMessage());
+//                }
+            }
+            else if(scanData.size() > 1 && switchedToMulti)
+            {
+                updateData("multibarcode detected after single barcode. Switching to single...");
+                setSingleBarcodeMode();
+                switchedToMulti = false;
+            }
             for(ScanData data : scanData) {
                 updateData("<font color='gray'>" + data.getLabelType() + "</font> : " + data.getData());
             }
@@ -179,6 +200,15 @@ public class MainActivity extends Activity implements EMDKListener, DataListener
     @Override
     public void onStatus(StatusData statusData) {
         ScannerStates state = statusData.getState();
+        if(switchedToMulti)
+        {
+//            try {
+//                cancelRead();
+//                scanner.read();
+//            } catch (ScannerException e) {
+//                updateStatus(e.getMessage());
+//            }
+        }
         switch(state) {
             case IDLE:
                 statusString = statusData.getFriendlyName()+" is enabled and idle...";
@@ -195,8 +225,15 @@ public class MainActivity extends Activity implements EMDKListener, DataListener
                     setDecoders();
                     bDecoderSettingsChanged = false;
                 }
+
                 // submit read
-                if(!scanner.isReadPending() && !bExtScannerDisconnected) {
+               if( !scanner.isReadPending() &&!bExtScannerDisconnected) {
+
+//                    if(switchedToMulti)
+//                    {
+//                        setSingleBarcodeMode();
+//                        switchedToMulti = false;
+//                    }
                     try {
                         scanner.read();
                     } catch (ScannerException e) {
@@ -378,6 +415,84 @@ public class MainActivity extends Activity implements EMDKListener, DataListener
                 config.decoderParams.code39.enabled= checkBoxCode39.isChecked();
                 //Set Code128
                 config.decoderParams.code128.enabled = checkBoxCode128.isChecked();
+                config.decoderParams.i2of5.enabled = true;
+                config.decoderParams.pdf417.enabled = true;
+                config.decoderParams.ukPostal.enabled = true;
+
+                config.multiBarcodeParams.barcodeCount = 2;
+
+                // Scan Mode set to Multi Barcode
+                // If it is a imager
+                config.readerParams.readerSpecific.imagerSpecific.scanMode = ScannerConfig.ScanMode.MULTI_BARCODE;
+                // If it is a camera
+                config.readerParams.readerSpecific.cameraSpecific.scanMode = ScannerConfig.ScanMode.MULTI_BARCODE;
+                //boolean instantReporting = config.multiBarcodeParams.instantReporting;
+
+                scanner.setConfig(config);
+            } catch (ScannerException e) {
+                updateStatus(e.getMessage());
+            }
+        }
+    }
+
+    private void setMultiBarcodeMode(){
+        if (scanner != null) {
+            try {
+                ScannerConfig config = scanner.getConfig();
+                // Set EAN8
+                config.decoderParams.ean8.enabled = true;
+                // Set EAN13
+                config.decoderParams.ean13.enabled = true;
+                // Set Code39
+                config.decoderParams.code39.enabled= true;
+                //Set Code128
+                config.decoderParams.code128.enabled = true;
+                config.decoderParams.i2of5.enabled = true;
+                config.decoderParams.pdf417.enabled = true;
+                config.decoderParams.ukPostal.enabled = true;
+
+                config.multiBarcodeParams.barcodeCount = 2;
+                try{
+                    //This throws an Exception, but we cannot even handle it. App crashes instantly
+                    boolean isInstantReportingOn = config.multiBarcodeParams.instantReporting;
+                    //and this, too
+                    config.multiBarcodeParams.instantReporting = true;
+                }
+                catch(Exception ex)
+                {
+                    ;
+                }
+
+                config.readerParams.readerSpecific.imagerSpecific.scanMode = ScannerConfig.ScanMode.MULTI_BARCODE;
+                scanner.setConfig(config);
+            } catch (ScannerException e) {
+                updateStatus(e.getMessage());
+            }
+        }
+    }
+
+    private void setSingleBarcodeMode(){
+        if (scanner != null) {
+            try {
+                ScannerConfig config = scanner.getConfig();
+                // Set EAN8
+                config.decoderParams.ean8.enabled = true;
+                // Set EAN13
+                config.decoderParams.ean13.enabled = true;
+                // Set Code39
+                config.decoderParams.code39.enabled= true;
+                //Set Code128
+                config.decoderParams.code128.enabled = true;
+                config.decoderParams.i2of5.enabled = true;
+                config.decoderParams.pdf417.enabled = true;
+                config.decoderParams.ukPostal.enabled = true;
+
+                config.multiBarcodeParams.barcodeCount = 1;
+
+                // Scan Mode set to Multi Barcode
+                // If it is a imager
+                config.readerParams.readerSpecific.imagerSpecific.scanMode = ScannerConfig.ScanMode.SINGLE_BARCODE;
+                // If it is a camera
                 scanner.setConfig(config);
             } catch (ScannerException e) {
                 updateStatus(e.getMessage());

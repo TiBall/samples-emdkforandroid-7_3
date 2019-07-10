@@ -392,8 +392,10 @@ public class MainActivity extends Activity implements EMDKListener, DataListener
                 config.readerParams.readerSpecific.imagerSpecific.scanMode = ScannerConfig.ScanMode.MULTI_BARCODE;
                 // If it is a camera
                 config.readerParams.readerSpecific.cameraSpecific.scanMode = ScannerConfig.ScanMode.MULTI_BARCODE;
-
                 // Setting the barcode count
+                config.multiBarcodeParams.barcodeCount = 2;
+
+
                 if(barcodeCount.getText().toString().length() > 0) {
                     config.multiBarcodeParams.barcodeCount = Integer.parseInt(barcodeCount.getText().toString());
                 }
