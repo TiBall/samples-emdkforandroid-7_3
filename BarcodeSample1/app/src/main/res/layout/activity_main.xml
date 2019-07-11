@@ -92,6 +92,13 @@
             android:onClick="softScan"
             android:text="Scan" />
 
+        <Button
+            android:id="@+id/buttonModify"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="modifyProfile"
+            android:text="Modify Profile" />
+
         <TextView
             android:id="@+id/textViewS"
             android:layout_width="match_parent"
