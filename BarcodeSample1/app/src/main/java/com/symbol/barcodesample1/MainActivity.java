@@ -120,10 +120,13 @@ public class MainActivity extends Activity implements EMDKListener, DataListener
         // Set default scanner
         spinnerScannerDevices.setSelection(defaultIndex);
     }
-
+    private long resumeTime = System.currentTimeMillis();
     @Override
     protected void onResume() {
         super.onResume();
+
+        resumeTime = System.currentTimeMillis();
+
         // The application is in foreground
         if (emdkManager != null) {
             // Acquire the barcode manager resources
@@ -170,8 +173,11 @@ public class MainActivity extends Activity implements EMDKListener, DataListener
     public void onData(ScanDataCollection scanDataCollection) {
         if ((scanDataCollection != null) && (scanDataCollection.getResult() == ScannerResults.SUCCESS)) {
             ArrayList <ScanData> scanData = scanDataCollection.getScanData();
+
+            long difference = System.currentTimeMillis() - resumeTime;
+
             for(ScanData data : scanData) {
-                updateData("<font color='gray'>" + data.getLabelType() + "</font> : " + data.getData());
+                updateData("<font color='gray'>" + data.getLabelType() + "</font> : " + data.getData() +" r-s: "+ difference + "ms");
             }
         }
     }
